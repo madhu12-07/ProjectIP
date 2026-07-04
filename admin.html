@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Herbarium Lens — Admin Observatory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Jost:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0A0B16;
+  --bg-2:#050510;
+  --surface:#131427;
+  --surface-2:#1B1D36;
+  --border:rgba(122,158,255,0.22);
+  --border-soft:rgba(232,235,255,0.09);
+  --gold:#3D8BFF;
+  --gold-soft:#8FC7FF;
+  --sage:#7FDDE0;
+  --sage-dark:#3D6B8C;
+  --parchment:#EAEBFB;
+  --muted:#8B8CB8;
+  --rust:#D9607A;
+  --font-display:'Space Grotesk', sans-serif;
+  --font-body:'Jost', sans-serif;
+  --font-mono:'IBM Plex Mono', monospace;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(1.5px 1.5px at 12% 18%, #fff, transparent),
+    radial-gradient(1px 1px at 28% 62%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 44% 8%, #cfd6ff, transparent),
+    radial-gradient(1px 1px at 58% 40%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 74% 74%, #fff, transparent),
+    radial-gradient(1px 1px at 81% 22%, #cfd6ff, transparent),
+    radial-gradient(1.5px 1.5px at 6% 84%, #fff, transparent),
+    radial-gradient(1px 1px at 90% 55%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 52% 90%, #cfd6ff, transparent),
+    radial-gradient(1px 1px at 22% 38%, #fff, transparent),
+    radial-gradient(ellipse 60% 45% at 15% 8%, rgba(122,90,255,0.16), transparent 60%),
+    radial-gradient(ellipse 55% 50% at 88% 85%, rgba(79,209,232,0.12), transparent 60%),
+    radial-gradient(ellipse 70% 60% at 92% 10%, rgba(80,110,255,0.10), transparent 60%),
+    var(--bg);
+  background-attachment:fixed;
+  color:var(--parchment);
+  font-family:var(--font-body);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--gold);color:var(--bg-2);}
+a{color:inherit;}
+button{font-family:var(--font-body);cursor:pointer;}
+input{font-family:var(--font-body);}
+h1,h2,h3{font-family:var(--font-display);font-weight:500;margin:0;color:var(--parchment);}
+.eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold-soft);}
+
+/* ---------- Auth screen ---------- */
+#authScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 20px;}
+.auth-card{width:100%;max-width:420px;background:linear-gradient(180deg, var(--surface), var(--surface-2));border:1px solid var(--border);border-radius:2px;padding:44px 40px 36px;position:relative;box-shadow:0 30px 60px -20px rgba(0,0,0,0.6);}
+.auth-card::before{content:'';position:absolute;inset:8px;border:1px solid var(--border-soft);pointer-events:none;}
+.brand-mark{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.brand-mark svg{flex-shrink:0;width:44px;height:44px;}
+.brand-name{font-family:var(--font-display);font-size:24px;letter-spacing:0.01em;}
+.brand-sub{font-family:var(--font-mono);font-size:10px;letter-spacing:0.16em;color:var(--muted);text-transform:uppercase;margin-top:2px;}
+.auth-note{font-size:13px;color:var(--muted);line-height:1.6;margin:20px 0 24px;}
+.field{margin-bottom:18px;}
+.field label{display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+.field input{width:100%;background:var(--bg-2);border:1px solid var(--border-soft);color:var(--parchment);padding:11px 13px;font-size:14px;border-radius:1px;transition:border-color .2s;}
+.field input:focus{outline:none;border-color:var(--gold);}
+.btn-primary{width:100%;background:var(--gold);color:var(--bg-2);border:none;padding:13px;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;font-weight:500;border-radius:1px;transition:background .2s, transform .15s;}
+.btn-primary:hover{background:var(--gold-soft);}
+.btn-primary:active{transform:scale(0.98);}
+.btn-ghost{background:none;border:1px solid var(--border);color:var(--parchment);padding:10px 16px;font-size:12px;letter-spacing:0.06em;border-radius:1px;transition:border-color .2s, color .2s;}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold-soft);}
+.auth-msg{font-size:13px;margin-top:14px;min-height:18px;font-family:var(--font-mono);}
+.auth-msg.err{color:var(--rust);}
+.auth-msg.ok{color:var(--sage);}
+
+/* ---------- Dashboard shell ---------- */
+#dashboard{min-height:100vh;display:flex;flex-direction:column;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 36px;border-bottom:1px solid var(--border-soft);background:rgba(10,11,22,0.7);backdrop-filter:blur(6px);position:sticky;top:0;z-index:10;}
+.topbar-brand{display:flex;align-items:center;gap:10px;}
+.topbar-brand svg{width:30px;height:30px;}
+.topbar-brand .tb-name{font-family:var(--font-display);font-size:18px;}
+.topbar-brand .tb-sub{font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;}
+.who{font-family:var(--font-mono);font-size:11px;color:var(--muted);display:flex;align-items:center;gap:14px;}
+.who button{background:none;border:1px solid var(--border-soft);color:var(--muted);padding:6px 12px;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;border-radius:1px;}
+.who button:hover{border-color:var(--rust);color:var(--rust);}
+
+main{flex:1;max-width:1120px;margin:0 auto;width:100%;padding:44px 32px 100px;}
+.page-head{margin-bottom:32px;display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+.page-head h2{font-size:30px;margin-top:6px;}
+.page-head p{color:var(--muted);font-size:13px;max-width:520px;margin-top:8px;line-height:1.6;}
+
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:36px;}
+.stat-card{background:linear-gradient(180deg, var(--surface), var(--surface-2));border:1px solid var(--border-soft);padding:20px 22px;position:relative;}
+.stat-card .stat-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);}
+.stat-card .stat-value{font-family:var(--font-display);font-size:32px;color:var(--gold-soft);margin-top:8px;}
+.stat-card .stat-sub{font-family:var(--font-mono);font-size:11px;color:var(--sage);margin-top:4px;}
+
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:12px;flex-wrap:wrap;}
+.search-box{flex:1;min-width:220px;max-width:340px;background:var(--surface);border:1px solid var(--border-soft);color:var(--parchment);padding:10px 13px;font-size:13px;border-radius:1px;}
+.search-box:focus{outline:none;border-color:var(--gold);}
+
+.user-table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border-soft);}
+.user-table th{text-align:left;font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);padding:12px 16px;border-bottom:1px solid var(--border-soft);}
+.user-table td{padding:14px 16px;border-bottom:1px solid var(--border-soft);font-size:13px;vertical-align:middle;}
+.user-row{cursor:pointer;transition:background .15s;}
+.user-row:hover{background:rgba(122,158,255,0.06);}
+.user-row .u-name{font-family:var(--font-display);font-size:16px;}
+.user-row .u-email{font-family:var(--font-mono);font-size:11px;color:var(--muted);}
+.count-pill{font-family:var(--font-mono);font-size:11px;color:var(--gold-soft);border:1px solid var(--border);border-radius:20px;padding:3px 10px;display:inline-block;}
+.expand-row td{background:var(--bg-2);padding:0;border-bottom:1px solid var(--border-soft);}
+.expand-inner{padding:18px 24px 26px;display:none;}
+.expand-inner.open{display:block;}
+.history-mini{display:flex;flex-direction:column;gap:10px;margin-top:10px;}
+.history-mini-item{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border-soft);padding:10px 14px;}
+.history-mini-item img{width:40px;height:40px;object-fit:cover;border-radius:1px;background:var(--bg-2);flex-shrink:0;}
+.history-mini-item .meta{flex:1;}
+.history-mini-item .meta .name{font-family:var(--font-display);font-size:15px;}
+.history-mini-item .meta .name .latin{font-style:italic;color:var(--sage);font-size:12px;margin-left:6px;}
+.history-mini-item .meta .when{font-family:var(--font-mono);font-size:10px;color:var(--muted);}
+.history-mini-item .conf{font-family:var(--font-mono);font-size:12px;color:var(--gold-soft);}
+.no-history{color:var(--muted);font-style:italic;font-size:13px;padding:6px 0;}
+.empty-state{text-align:center;color:var(--muted);font-style:italic;padding:60px 0;font-size:14px;}
+
+footer{text-align:center;padding:24px;font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:0.08em;border-top:1px solid var(--border-soft);}
+</style>
+</head>
+<body>
+
+<!-- ================= AUTH SCREEN ================= -->
+<div id="authScreen">
+  <div class="auth-card">
+    <div class="brand-mark">
+      <svg viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="goldGradObs" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#8FC7FF"/><stop offset="50%" stop-color="#3D8BFF"/><stop offset="100%" stop-color="#1B4E9E"/></linearGradient></defs>
+        <circle cx="80" cy="80" r="70" fill="none" stroke="url(#goldGradObs)" stroke-width="1.3"/>
+        <ellipse cx="80" cy="80" rx="66" ry="20" transform="rotate(-18 80 80)" fill="none" stroke="url(#goldGradObs)" stroke-width="0.9" opacity="0.6"/>
+        <circle cx="80" cy="80" r="30" fill="none" stroke="url(#goldGradObs)" stroke-width="1.2"/>
+        <circle cx="80" cy="80" r="17" fill="url(#goldGradObs)" fill-opacity="0.18" stroke="url(#goldGradObs)" stroke-width="1"/>
+        <circle cx="80" cy="80" r="6" fill="url(#goldGradObs)"/>
+        <circle cx="141" cy="63" r="3.5" fill="url(#goldGradObs)"/>
+      </svg>
+      <div><div class="brand-name">Admin Observatory</div><div class="brand-sub">Herbarium Lens — Control Deck</div></div>
+    </div>
+
+    <div id="setupForm" style="display:none;">
+      <p class="auth-note">First-time setup. Confirm the authorised administrator email and choose a password to unlock the Observatory. Only this address may hold admin access.</p>
+      <div class="field"><label>Administrator Email</label><input type="email" id="setupEmail" placeholder="you@gmail.com"></div>
+      <div class="field"><label>Create Password</label><input type="password" id="setupPassword" placeholder="At least 4 characters"></div>
+      <div class="field"><label>Confirm Password</label><input type="password" id="setupPassword2" placeholder="Repeat password"></div>
+      <button class="btn-primary" onclick="handleSetup()">Initialise Observatory</button>
+    </div>
+
+    <div id="loginForm" style="display:none;">
+      <p class="auth-note">Restricted access. Enter your administrator password to continue.</p>
+      <div class="field"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
+      <button class="btn-primary" onclick="handleAdminLogin()">Unlock Observatory</button>
+    </div>
+
+    <div class="auth-msg" id="authMsg"></div>
+  </div>
+</div>
+
+<!-- ================= DASHBOARD ================= -->
+<div id="dashboard" hidden>
+  <div class="topbar">
+    <div class="topbar-brand">
+      <svg viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="goldGradObsTop" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#8FC7FF"/><stop offset="50%" stop-color="#3D8BFF"/><stop offset="100%" stop-color="#1B4E9E"/></linearGradient></defs>
+        <circle cx="80" cy="80" r="70" fill="none" stroke="url(#goldGradObsTop)" stroke-width="1.6"/>
+        <ellipse cx="80" cy="80" rx="66" ry="20" transform="rotate(-18 80 80)" fill="none" stroke="url(#goldGradObsTop)" stroke-width="1" opacity="0.6"/>
+        <circle cx="80" cy="80" r="30" fill="none" stroke="url(#goldGradObsTop)" stroke-width="1.4"/>
+        <circle cx="80" cy="80" r="17" fill="url(#goldGradObsTop)" fill-opacity="0.2" stroke="url(#goldGradObsTop)" stroke-width="1.1"/>
+        <circle cx="80" cy="80" r="6" fill="url(#goldGradObsTop)"/>
+        <circle cx="141" cy="63" r="3.5" fill="url(#goldGradObsTop)"/>
+      </svg>
+      <div><div class="tb-name">Admin Observatory</div><div class="tb-sub">Herbarium Lens</div></div>
+    </div>
+    <div class="who">
+      <span id="whoAmI"></span>
+      <button onclick="refreshDashboard()">Refresh</button>
+      <button onclick="handleAdminLogout()">Log Out</button>
+    </div>
+  </div>
+
+  <main>
+    <div class="page-head">
+      <div>
+        <div class="eyebrow">Mission Control</div>
+        <h2>Herbarium Lens — <span style="color:var(--sage)">Activity</span></h2>
+        <p>Every registered account and every specimen they've analysed, mirrored here in real time from the Herbarium Lens storage layer.</p>
+      </div>
+    </div>
+
+    <div class="stats-grid" id="statsGrid"></div>
+
+    <div class="toolbar">
+      <input type="text" class="search-box" id="searchBox" placeholder="Search by name or email…" oninput="renderUsers()">
+    </div>
+    <table class="user-table">
+      <thead>
+        <tr><th>Name</th><th>Email</th><th>Joined</th><th>Last Seen</th><th>Identifications</th></tr>
+      </thead>
+      <tbody id="userTableBody"></tbody>
+    </table>
+    <div id="emptyState" class="empty-state" style="display:none;">No specimens have been logged by any account yet.</div>
+  </main>
+  <footer>HERBARIUM LENS ADMIN OBSERVATORY — READ-ONLY MIRROR OF SHARED ACCOUNT ACTIVITY<span style="display:block;margin-top:4px;color:var(--sage);">© 2026 Herbarium Lens. Restricted access.</span></footer>
+</div>
+
+<script>
+const ADMIN_EMAIL = '007.madhukrishnan@gmail.com';
+
+/* ---------- storage helpers ----------
+   Uses window.storage inside Claude.ai's artifact preview; falls back to
+   localStorage when hosted anywhere else (VS Code Live Server, any static
+   host, etc). localStorage is shared with the main Herbarium Lens site as
+   long as both are served from the same origin (same host + port). */
+const HAS_CLOUD_STORAGE = (typeof window.storage !== 'undefined' && window.storage && typeof window.storage.get === 'function');
+
+async function storeGet(key){
+  if(HAS_CLOUD_STORAGE){
+    try{ const r = await window.storage.get(key,false); return r ? JSON.parse(r.value) : null; }
+    catch(e){ return null; }
+  }
+  try{ const raw = localStorage.getItem('hl_priv:'+key); return raw ? JSON.parse(raw) : null; }
+  catch(e){ return null; }
+}
+async function storeSet(key,value){
+  if(HAS_CLOUD_STORAGE){
+    try{ await window.storage.set(key, JSON.stringify(value), false); return true; }
+    catch(e){ console.error('storage set failed', e); return false; }
+  }
+  try{ localStorage.setItem('hl_priv:'+key, JSON.stringify(value)); return true; }
+  catch(e){ console.error('local storage set failed', e); return false; }
+}
+async function storeDelete(key){
+  if(HAS_CLOUD_STORAGE){
+    try{ await window.storage.delete(key,false); }catch(e){}
+    return;
+  }
+  try{ localStorage.removeItem('hl_priv:'+key); }catch(e){}
+}
+async function sharedGet(key){
+  if(HAS_CLOUD_STORAGE){
+    try{ const r = await window.storage.get(key,true); return r ? JSON.parse(r.value) : null; }
+    catch(e){ return null; }
+  }
+  try{ const raw = localStorage.getItem('hl_shared:'+key); return raw ? JSON.parse(raw) : null; }
+  catch(e){ return null; }
+}
+
+function simpleHash(str){
+  let h = 5381;
+  for(let i=0;i<str.length;i++){ h = ((h<<5)+h) + str.charCodeAt(i); h = h & h; }
+  return 'h'+Math.abs(h).toString(36);
+}
+
+function showAuthMsg(text, ok){
+  const el = document.getElementById('authMsg');
+  el.textContent = text;
+  el.className = 'auth-msg ' + (ok ? 'ok' : 'err');
+}
+
+/* ---------- boot: decide setup vs login vs auto-login ---------- */
+(async function boot(){
+  const session = await storeGet('admin_session');
+  const account = await storeGet('admin_account');
+  if(session && account){ enterDashboard(); return; }
+  if(account){ document.getElementById('loginForm').style.display = 'block'; }
+  else{ document.getElementById('setupForm').style.display = 'block'; }
+})();
+
+async function handleSetup(){
+  const email = document.getElementById('setupEmail').value.trim().toLowerCase();
+  const pw = document.getElementById('setupPassword').value;
+  const pw2 = document.getElementById('setupPassword2').value;
+  if(!email || !pw || !pw2){ showAuthMsg('Please fill in every field.', false); return; }
+  if(email !== ADMIN_EMAIL){ showAuthMsg('Access restricted to the authorised administrator email.', false); return; }
+  if(pw.length < 4){ showAuthMsg('Password should be at least 4 characters.', false); return; }
+  if(pw !== pw2){ showAuthMsg('Passwords do not match.', false); return; }
+  await storeSet('admin_account', { email, passHash: simpleHash(pw) });
+  await storeSet('admin_session', true);
+  showAuthMsg('Observatory initialised. Entering…', true);
+  setTimeout(enterDashboard, 450);
+}
+
+async function handleAdminLogin(){
+  const pw = document.getElementById('loginPassword').value;
+  if(!pw){ showAuthMsg('Enter your password.', false); return; }
+  const account = await storeGet('admin_account');
+  if(!account || account.passHash !== simpleHash(pw)){ showAuthMsg('Incorrect password.', false); return; }
+  await storeSet('admin_session', true);
+  showAuthMsg('Access granted.', true);
+  setTimeout(enterDashboard, 350);
+}
+
+function handleAdminLogout(){
+  storeDelete('admin_session');
+  adminLoggedIn = false;
+  document.getElementById('dashboard').hidden = true;
+  document.getElementById('authScreen').style.display = 'flex';
+  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('setupForm').style.display = 'none';
+  const pwEl = document.getElementById('loginPassword');
+  if(pwEl) pwEl.value = '';
+}
+
+/* ---------- dashboard ---------- */
+let ALL_USERS = [];
+let adminLoggedIn = false;
+
+async function enterDashboard(){
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('dashboard').hidden = false;
+  document.getElementById('whoAmI').textContent = ADMIN_EMAIL;
+  adminLoggedIn = true;
+  // Trap the browser/swipe "back" gesture while logged in: push a guard state
+  // so going back re-lands on this same guard instead of exposing the login screen.
+  history.pushState({ hlAdmin:true }, '', location.href);
+  await loadDashboard();
+}
+
+/* While logged in, block back navigation from ever revealing the auth screen.
+   Only an explicit Log Out should show the login page again. */
+window.addEventListener('popstate', function(){
+  if(adminLoggedIn){
+    history.pushState({ hlAdmin:true }, '', location.href);
+  }
+});
+
+/* Guard against the browser restoring a cached snapshot (bfcache) that shows
+   the pre-login DOM even though the admin is still authenticated in memory. */
+window.addEventListener('pageshow', function(e){
+  if(e.persisted && adminLoggedIn){
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('dashboard').hidden = false;
+  }
+});
+
+async function refreshDashboard(){
+  await loadDashboard();
+}
+
+async function loadDashboard(){
+  const users = (await sharedGet('hl_admin_users')) || [];
+  const withCounts = await Promise.all(users.map(async u=>{
+    const hist = (await sharedGet('hl_admin_history:'+u.email)) || [];
+    return { ...u, historyCount: hist.length, history: hist };
+  }));
+  withCounts.sort((a,b)=> (b.lastLogin||0) - (a.lastLogin||0));
+  ALL_USERS = withCounts;
+  renderStats();
+  renderUsers();
+}
+
+function renderStats(){
+  const grid = document.getElementById('statsGrid');
+  const totalUsers = ALL_USERS.length;
+  const totalIds = ALL_USERS.reduce((s,u)=>s+u.historyCount,0);
+  const speciesCount = {};
+  ALL_USERS.forEach(u=> u.history.forEach(h=>{ speciesCount[h.species] = (speciesCount[h.species]||0)+1; }));
+  let topSpecies = '—';
+  let topN = 0;
+  Object.entries(speciesCount).forEach(([sp,n])=>{ if(n>topN){ topN=n; topSpecies=sp; } });
+  const weekAgo = Date.now() - 7*24*60*60*1000;
+  const activeThisWeek = ALL_USERS.filter(u=> (u.lastLogin||0) > weekAgo).length;
+
+  grid.innerHTML = `
+    <div class="stat-card"><div class="stat-label">Registered Users</div><div class="stat-value">${totalUsers}</div><div class="stat-sub">All time</div></div>
+    <div class="stat-card"><div class="stat-label">Identifications Run</div><div class="stat-value">${totalIds}</div><div class="stat-sub">Across all accounts</div></div>
+    <div class="stat-card"><div class="stat-label">Most Identified</div><div class="stat-value" style="font-size:22px;">${topSpecies}</div><div class="stat-sub">${topN ? topN+' time'+(topN===1?'':'s') : ''}</div></div>
+    <div class="stat-card"><div class="stat-label">Active This Week</div><div class="stat-value">${activeThisWeek}</div><div class="stat-sub">Logged in within 7 days</div></div>
+  `;
+}
+
+function renderUsers(){
+  const q = document.getElementById('searchBox').value.trim().toLowerCase();
+  const body = document.getElementById('userTableBody');
+  const empty = document.getElementById('emptyState');
+  const filtered = ALL_USERS.filter(u => !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+
+  if(ALL_USERS.length === 0){ body.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+
+  if(filtered.length === 0){
+    body.innerHTML = `<tr><td colspan="5" class="no-history">No accounts match "${q}".</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = filtered.map((u,i)=>`
+    <tr class="user-row" onclick="toggleExpand(${i})">
+      <td class="u-name">${escapeHtml(u.name)}</td>
+      <td class="u-email">${escapeHtml(u.email)}</td>
+      <td>${new Date(u.joinedAt).toLocaleDateString()}</td>
+      <td>${new Date(u.lastLogin).toLocaleString()}</td>
+      <td><span class="count-pill">${u.historyCount}</span></td>
+    </tr>
+    <tr class="expand-row"><td colspan="5">
+      <div class="expand-inner" id="expand${i}">
+        ${u.history.length === 0 ? '<div class="no-history">No specimens analysed yet.</div>' : `
+          <div class="history-mini">
+            ${u.history.map(h=>`
+              <div class="history-mini-item">
+                ${h.thumb ? `<img src="${h.thumb}" alt="${escapeHtml(h.species)}">` : ''}
+                <div class="meta">
+                  <div class="name">${escapeHtml(h.species)}<span class="latin">${escapeHtml(h.latin)}</span></div>
+                  <div class="when">${new Date(h.ts).toLocaleString()}</div>
+                </div>
+                <div class="conf">${h.confidence.toFixed(0)}%</div>
+              </div>
+            `).join('')}
+          </div>
+        `}
+      </div>
+    </td></tr>
+  `).join('');
+}
+
+function toggleExpand(i){
+  const el = document.getElementById('expand'+i);
+  if(el) el.classList.toggle('open');
+}
+
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s == null ? '' : String(s);
+  return d.innerHTML;
+}
+</script>
+</body>
+</html>
